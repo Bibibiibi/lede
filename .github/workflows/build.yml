@@ -1,4 +1,4 @@
-name: OpenWrt CI
+name: OpenWrt Minimal CI
 
 on:
   workflow_dispatch:
@@ -20,16 +20,16 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: Clean old build
+      - name: Clean previous builds
         run: |
           make clean
           make dirclean
 
-      - name: Load custom config
+      - name: Load config
         run: |
-          [ -f .config ] && echo "Using existing .config" || make defconfig
+          [ -f .config ] && echo "Using custom .config" || make defconfig
 
-      - name: Start build
+      - name: Build firmware
         run: |
           make defconfig
           make -j$(nproc) V=s
@@ -37,5 +37,5 @@ jobs:
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
-          name: openwrt-firmware
+          name: openwrt-minimal-firmware
           path: bin/targets
