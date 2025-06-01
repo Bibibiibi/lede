@@ -1,0 +1,41 @@
+name: OpenWrt CI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential ccache libncurses5-dev             libssl-dev python3 unzip gawk subversion git zlib1g-dev wget
+
+      - name: Init feeds
+        run: |
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Clean old build
+        run: |
+          make clean
+          make dirclean
+
+      - name: Load custom config
+        run: |
+          [ -f .config ] && echo "Using existing .config" || make defconfig
+
+      - name: Start build
+        run: |
+          make defconfig
+          make -j$(nproc) V=s
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: openwrt-firmware
+          path: bin/targets
